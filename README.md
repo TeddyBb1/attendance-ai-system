@@ -242,4 +242,3 @@ Exemple de observații:
 
 ---
 
-> 💡 <em>Acest README descrie exclusiv Etapa 3 (Analiza și Pregătirea Setului de Date) din proiectul de Rețele Neuronale – sistem de prezență pe baza recunoașterii faciale.</em>
