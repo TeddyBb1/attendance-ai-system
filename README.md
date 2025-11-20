@@ -75,7 +75,7 @@ RN/
 ├── output/
 │   └── prezenta.csv              # fișierul final cu prezența (exportat automat)
 │
-├── alte-le/                      # alte fișiere / experimente
+├── altele/                      # alte fișiere / experimente
 │
 └── requirements.txt              # dependențe Python
 </pre>
