@@ -1,6 +1,6 @@
 <div align="center" style="padding: 20px 20px 10px; border-radius: 16px; background: linear-gradient(135deg, #111827, #020617); color: #fff;">
 
-  <!-- Banner proiect (înlocuiește docs/banner.gif cu ce vrei tu) -->
+  <!-- Banner proiect -->
   <img src="docs/banner.png" alt="Face Attendance AI System Banner" style="max-width: 100%; border-radius: 14px; margin-bottom: 18px; box-shadow: 0 18px 40px rgba(0,0,0,0.45);">
 
   <h1 style="font-size: 40px; margin-bottom: 0.2em;">📘 Etapa 3 – Analiza & Preprocesarea Datelor</h1>
@@ -21,7 +21,7 @@
 <div style="padding: 18px; margin-bottom: 25px; background: #f4f7fe; border-left: 5px solid #4f46e5; border-radius: 8px;">
   <strong>Student:</strong> Baba Cristian-Teodor<br>
   <strong>Disciplina:</strong> Rețele Neuronale – FIIR<br>
-  <strong>Scopul etapei:</strong> Pregătirea unui set de date curat, standardizat și bine documentat pentru antrenarea rețelelor neuronale de recunoaștere facială.
+  <strong>Scopul etapei:</strong> Pregătirea unui set de date curat, standardizat și bine documentat pentru antrenarea rețelelor neuronale de recunoaștere facială, utilizate în sistemul AI de analiză automată a prezenței.
 </div>
 
 ---
@@ -30,28 +30,53 @@
 
 <div style="padding: 20px; border-radius: 12px; background:#020617; color:#e5e7eb; font-family: Consolas, 'Fira Code', monospace; font-size: 14px;">
 <pre>
-face-attendance-ai/
+RN/
+│
 ├── README.md
+│
 ├── docs/
-│   └── datasets/
-│        ├── dataset_description.md
-│        ├── face_pipeline_diagram.png
-│        └── sources.md
+│   └── datasets/                 # descriere seturi de date, surse, diagrame
+│
 ├── data/
-│   ├── raw/               # imagini brute
-│   ├── cleaned/           # imagini curățate (crop față, normalizare)
-│   ├── embeddings/        # vectori 128D generați de RN
-│   ├── train/             # set de antrenare
-│   ├── validation/        # set de validare
-│   └── test/              # set de testare final
+│   ├── raw/                      # date brute
+│   │   ├── input-poze-clasa/     # poze cu sala de curs (mulți studenți)
+│   │   └── input-poze-fete/      # poze de înscriere (fețe cunoscute)
+│   │
+│   ├── processed/                # fețe crop-uite, normalizate (Etapa 3)
+│   │
+│   ├── train/                    # (în Etapa 4) set de antrenare RN
+│   ├── validation/               # (în Etapa 4) set de validare
+│   └── test/                     # (în Etapa 4) set de test
+│
 ├── src/
-│   ├── preprocessing/     # pipeline de preprocesare
-│   ├── face_extraction/   # YOLO + decupare față
-│   ├── embedding_model/   # generare embeddings
-│   └── utils/             # funcții auxiliare
-├── config/
-│   └── preprocessing.yaml # parametri & setări de preprocesare
-└── requirements.txt
+│   ├── preprocessing/
+│   │   └── split_faces.py        # împărțire / extragere fețe din sprite-uri
+│   │
+│   ├── data_acquisition/         # (în viitor) captură din cameră, streaming
+│   │
+│   ├── neural_network/
+│   │   ├── web_app.py            # aplicația web (UI + upload + pipeline)
+│   │   ├── face_embeddings.py    # generare embeddings 128D pentru fețe
+│   │   ├── yolo_face_detector.py # detecție facială YOLO (preprocesare imagini)
+│   │   ├── recognize_and_log.py  # recunoaștere + log CSV (varianta CLI)
+│   │   │
+│   │   ├── static/
+│   │   │   ├── uploads/          # pozele încărcate din UI
+│   │   │   └── results/          # imagini rezultate cu detecții & highlight
+│   │   │
+│   │   └── templates/
+│   │       ├── index.html        # UI principal pentru recunoaștere
+│   │       └── admin.html        # UI pentru administrare / înscriere fețe
+│
+├── models/
+│   └── yolov11m.pt               # modelul YOLO pentru detecție facială
+│
+├── output/
+│   └── prezenta.csv              # fișierul final cu prezența (exportat automat)
+│
+├── alte-le/                      # alte fișiere / experimente
+│
+└── requirements.txt              # dependențe Python
 </pre>
 </div>
 
@@ -64,22 +89,22 @@ face-attendance-ai/
   <div style="flex:1; min-width:260px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid #d1d5db; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>📍 Sursa Datelor</h3>
     <ul>
-      <li>Imagini generate cu AI (control asupra condițiilor)</li>
-      <li>Upload manual prin interfața web</li>
-      <li>Capturi YOLO din fluxul camerei (live)</li>
+      <li><strong>input-poze-clasa/</strong> – cadre cu sala de curs, mai mulți studenți simultan;</li>
+      <li><strong>input-poze-fete/</strong> – fotografii individuale pentru înscrierea fețelor cunoscute;</li>
+      <li>în viitor: captură directă din cameră prin modulul <code>data_acquisition/</code>.</li>
     </ul>
-    <p><strong>Scop:</strong> Antrenarea și testarea unui sistem de prezență bazat pe recunoaștere facială.</p>
+    <p><strong>Scop:</strong> Construirea unui set de date realist pentru antrenarea și testarea sistemului de prezență bazat pe recunoaștere facială.</p>
   </div>
 
   <div style="flex:1; min-width:260px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid #d1d5db; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>📊 Dimensiunea Dataset-ului</h3>
     <ul>
-      <li>~200–300 imagini brute</li>
-      <li>10–15 persoane distincte</li>
-      <li>Format: JPG / PNG</li>
-      <li>Rezoluție finală: 224×224 px</li>
+      <li>~200–300 imagini brute (combinație între poze de clasă și poze individuale);</li>
+      <li>10–15 persoane distincte în versiunea curentă;</li>
+      <li>Format imagini: <strong>JPG / PNG</strong>;</li>
+      <li>Rezoluție finală după preprocesare: <strong>224×224 px</strong> pe fiecare față.</li>
     </ul>
-    <p>Imaginile sunt organizate pe persoane, cu un număr relativ echilibrat de exemple per identitate.</p>
+    <p>Imaginile sunt organizate pe persoane, astfel încât fiecare student să aibă suficient material pentru antrenare și test.</p>
   </div>
 
 </div>
@@ -88,16 +113,16 @@ face-attendance-ai/
 
 ### 2.1 Caracteristici Numerice & Metadate
 
-Embeddings și metadate generate după preprocesare:
+Embedding-urile și metadatele generate după preprocesare:
 
-| Caracteristică | Tip      | Dimensiune | Descriere                                            |
-|----------------|----------|------------|------------------------------------------------------|
-| `embedding`    | numeric  | 128        | Vector RN pentru fiecare față (spațiul de featuri)  |
-| `confidence`   | numeric  | scalar     | Scor YOLO de încredere că este față validă          |
-| `bbox`         | numeric  | 4 valori   | Coordonatele dreptunghiului de detecție (x1,y1,x2,y2) |
-| `person_id`    | categ.   | scalar     | ID unic al persoanei (label de clasă)               |
+| Caracteristică | Tip      | Dimensiune | Descriere                                                  |
+|----------------|----------|------------|------------------------------------------------------------|
+| `embedding`    | numeric  | 128        | Vector de featuri generat de rețeaua neuronală pentru față |
+| `confidence`   | numeric  | scalar     | Scor YOLO de încredere că zona detectată este o față       |
+| `bbox`         | numeric  | 4 valori   | Coordonatele dreptunghiului de detecție (x1,y1,x2,y2)      |
+| `person_id`    | categ.   | scalar     | ID-ul / numele persoanei (label de clasă, dacă e cunoscută)|
 
-> Documentația detaliată se află în `docs/datasets/dataset_description.md`.
+> Documentația detaliată se va afla în `docs/datasets/dataset_description.md`.
 
 ---
 
@@ -110,35 +135,39 @@ Embeddings și metadate generate după preprocesare:
 
 ### 3.1 Statistici Descriptive
 
-- Distribuție imagini / persoană
-- Număr mediu de imagini per individ
-- Verificare iluminare, blur, poziția feței
-- Rata de detecție YOLO (confidence > prag)
+Pe setul de imagini brute și pe embedding-uri sunt analizate:
+
+- numărul de imagini per persoană (distribuția etichetelor);
+- numărul de fețe detectate per fotografie de clasă;
+- histogramă pe valori de <code>confidence</code> YOLO;
+- distribuția dimensiunii bounding box-urilor (fețe foarte mici vs. foarte mari);
+- analiza calității imaginilor (blur, iluminare, unghi).
 
 Exemple de observații:
 
-- Persoanele au între 10 și 25 imagini fiecare.
-- ~8% din imagini au confidence < 0.7 (considerate problematice).
-- Câteva imagini conțin fețe parțial acoperite sau orientări extreme.
+- Persoanele au între 10 și 25 imagini utile fiecare;
+- ~8–10% dintre imagini au <code>confidence</code> sub pragul stabilit și sunt marcate pentru excludere;
+- anumite poze de clasă conțin fețe foarte îndepărtate → risc de embedding slăbuț.
 
 ---
 
 ### 3.2 Analiza Calității Datelor
 
-- Identificarea imaginilor:
-  - fără față detectată
-  - cu fețe multiple
-  - cu detecție slabă (sub un prag stabilit, ex. 0.7)
-- Identificarea imaginilor neclare (blur vizibil)
-- Compararea distribuției fețelor între persoane
+Sunt verificate următoarele probleme:
+
+- imagini fără nicio față detectată;
+- imagini cu fețe multiple care se suprapun sau sunt parțial acoperite;
+- imagini extrem de întunecate sau supraexpuse;
+- embedding-uri cu distanță prea mare față de restul clasei (posibile erori).
 
 ---
 
 ### 3.3 Probleme Identificate
 
-- Iluminare neuniformă → necesară normalizarea / augmentarea.
-- Dezechilibru: unele persoane au mai puține imagini față de altele.
-- ~12 imagini conțin mai multe fețe → ele au fost fie filtrate, fie tratate separat.
+- Iluminare neuniformă între seturile de poze (în special între poze generate și poze reale);
+- Dezechilibru între persoane (unii studenți au mult mai multe imagini decât alții);
+- O parte dintre fețele detectate în <code>input-poze-clasa/</code> sunt prea mici pentru o recunoaștere robustă;
+- Câteva imagini conțin fețe neclare (motion blur) sau orientate la un unghi prea mare.
 
 </details>
 
@@ -152,10 +181,15 @@ Exemple de observații:
 <br>
 
 <div style="background:#fff7e6; padding:20px; border-left:5px solid #f59e0b; border-radius:8px;">
-✔ Eliminare imagini duplicate<br>
-✔ Eliminare imagini fără față detectată de YOLO<br>
-✔ Eliminare imagini cu mai multe fețe (dacă nu au putut fi separate corect)<br>
-✔ Conversie la format uniform (JPG, aceeași rezoluție de bază)<br>
+<ul>
+  <li>Detecție facială pentru fiecare imagine folosind <code>yolov11m.pt</code> în <code>yolo_face_detector.py</code>;</li>
+  <li>Filtrarea fețelor cu <strong>confidence</strong> sub un prag (ex. 0.65–0.70);</li>
+  <li>Excluderea imaginilor fără fețe valide;</li>
+  <li>Excluderea cazurilor cu multe fețe suprapuse sau foarte mici (la nevoie);</li>
+  <li>Eliminarea duplicatelor (aceeași imagine salvată de mai multe ori);</li>
+  <li>Conversia formatelor și rezoluțiilor la un standard comun (JPG + rezoluție minimă acceptată).</li>
+</ul>
+Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă de imagini crop-uite cu fețele individuale.
 </div>
 
 </details>
@@ -163,7 +197,7 @@ Exemple de observații:
 ---
 
 <details>
-  <summary><strong>✨ 4.2 Transformarea caracteristicilor (click pentru detalii)</strong></summary>
+  <summary><strong>✨ 4.2 Transformarea caracteristicilor & generarea embedding-urilor</strong></summary>
 
 <br>
 
@@ -171,17 +205,20 @@ Exemple de observații:
 
   <div style="flex:1; min-width:270px; padding:20px; border-radius:10px; background:#020617; color:#e5e7eb; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>🧠 Embedding RN</h3>
-    <p>Fiecare față validă este trecută printr-un model de rețea neuronală pentru a genera un vector de featuri de dimensiune 128. Acest vector este baza comparației între persoane.</p>
+    <p>Fiecare față preprocesată este trecută prin modelul de rețea neuronală (ex. FaceNet / DeepFace) implementat în <code>face_embeddings.py</code>, rezultând un vector numeric de dimensiune 128. Acest vector reprezintă „amprenta” feței în spațiul de featuri.</p>
+    <p>Embedding-urile se salvează într-o structură de tip:
+    <br><code>data/embeddings/{person_id}/face_01.npy</code></p>
   </div>
 
   <div style="flex:1; min-width:270px; padding:20px; border-radius:10px; background:#0f172a; color:#e5e7eb; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>📏 Normalizare & Crop</h3>
     <ul>
-      <li>Decupare față utilizând bounding box-ul YOLO</li>
-      <li>Redimensionare la 224×224 px</li>
-      <li>Normalizare valori pixel (ex: [0,1])</li>
+      <li>Decupare fețe pe baza bounding box-ului YOLO;</li>
+      <li>Redimensionare la <strong>224×224 px</strong> pentru toate imaginile;</li>
+      <li>Conversie BGR → RGB și normalizare valori pixel (de ex. în intervalul [0,1]);</li>
+      <li>Opțional: eliminarea zgomotului, corecții de contrast sau augmentări ușoare.</li>
     </ul>
-    <p>Aceste transformări asigură consistența imaginilor înainte de antrenare.</p>
+    <p>Aceste transformări asigură consistența datelor de intrare pentru modelul neuronal.</p>
   </div>
 
 </div>
@@ -198,16 +235,17 @@ Exemple de observații:
 <div style="padding:25px; background:#e3fae6; border-radius:12px; border:1px solid #bbf7d0;">
   <h3>Proporții utilizate</h3>
   <ul>
-    <li>70% — <strong>Train</strong></li>
-    <li>15% — <strong>Validation</strong></li>
-    <li>15% — <strong>Test</strong></li>
+    <li>70% — <strong>Train</strong> (antrenare model RN pe embedding-uri);</li>
+    <li>15% — <strong>Validation</strong> (tuning hyperparametri, early stopping);</li>
+    <li>15% — <strong>Test</strong> (evaluare finală, fără a fi atins în timpul antrenării).</li>
   </ul>
   <h4>Principii respectate:</h4>
   <ul>
-    <li>Stratificare pe persoană (fiecare persoană apare în toate seturile, dar cu imagini diferite)</li>
-    <li>Fără scurgere de informație (no data leakage)</li>
-    <li>Statisticile de normalizare se calculează DOAR pe train și se aplică pe val/test</li>
+    <li>Stratificare pe <code>person_id</code> astfel încât fiecare persoană să apară în toate seturile, dar cu imagini diferite;</li>
+    <li>Fără scurgere de informație (no data leakage) între <code>train</code>, <code>validation</code> și <code>test</code>;</li>
+    <li>Statisticile de normalizare și eventualele transformări se calculează exclusiv pe <strong>train</strong> și apoi se aplică pe <strong>val/test</strong>.</li>
   </ul>
+  <p>Seturile rezultate sunt salvate în folderele <code>data/train/</code>, <code>data/validation/</code> și <code>data/test/</code>, respectiv în fișiere CSV / JSON cu liste de căi + etichete.</p>
 </div>
 
 </details>
@@ -218,13 +256,14 @@ Exemple de observații:
 
 <div style="padding:20px; background:#eff6ff; border-radius:12px; border:1px solid #bfdbfe;">
 <ul>
-  <li>📂 <code>data/raw/</code> – imagini brute (direct din sursă)</li>
-  <li>📂 <code>data/cleaned/</code> – imagini cropate, normalizate, gata de embedding</li>
-  <li>📂 <code>data/embeddings/</code> – vectori 128D pentru fiecare față</li>
-  <li>📂 <code>data/train/</code>, <code>data/validation/</code>, <code>data/test/</code> – împărțirea finală a seturilor</li>
-  <li>📂 <code>src/preprocessing/</code> – codul pipeline-ului de preprocesare</li>
-  <li>📄 <code>config/preprocessing.yaml</code> – praguri, dimensiuni, setări YOLO / RN</li>
-  <li>📄 <code>docs/datasets/dataset_description.md</code> – documentație detaliată a dataset-ului</li>
+  <li>📂 <code>data/raw/</code> – imagini brute (poze de clasă + poze individuale);</li>
+  <li>📂 <code>data/processed/</code> – fețe decupate și normalizate, gata pentru embedding;</li>
+  <li>📂 <code>data/embeddings/</code> – vectori 128D pentru fiecare față (organizați pe persoane);</li>
+  <li>📂 <code>data/train/</code>, <code>data/validation/</code>, <code>data/test/</code> – împărțirea finală a datelor pentru antrenare și testare;</li>
+  <li>📂 <code>src/preprocessing/</code> – scripturi dedicate tăierii și pregătirii fețelor (ex. <code>split_faces.py</code>);</li>
+  <li>📂 <code>src/neural_network/</code> – codul de detecție, embedding și recunoaștere (<code>yolo_face_detector.py</code>, <code>face_embeddings.py</code>, <code>recognize_and_log.py</code>);</li>
+  <li>📄 <code>docs/datasets/dataset_description.md</code> – descriere detaliată a dataset-ului (de completat);</li>
+  <li>📄 <code>config/preprocessing.yaml</code> – praguri de confidence, dimensiuni, și parametri de preprocesare (opțional).</li>
 </ul>
 </div>
 
@@ -233,12 +272,11 @@ Exemple de observații:
 ## ✅ 6. Stare Etapă (to-do list GitHub)
 
 - [x] Structură repository configurată pentru Etapa 3  
-- [x] Dataset analizat (EDA de bază realizată)  
-- [x] Date curățate și preprocesate (crop, resize, normalizare)  
-- [x] Generare embeddings (vectori 128D)  
-- [ ] Împărțire finală Train / Validation / Test salvată în foldere dedicate  
-- [ ] Actualizare documentație în `docs/datasets/dataset_description.md`  
-- [ ] Export PDF / DOC pentru predarea oficială (opțional)
+- [x] Colectare imagini brute în `data/raw/`  
+- [x] Detecție facială + crop fețe în `data/processed/`  
+- [x] Generare embeddings (vectori 128D) în `data/embeddings/`  
+- [ ] Împărțire finală Train / Validation / Test salvată în folder-ele dedicate  
+- [ ] Documentație completă în `docs/datasets/dataset_description.md`  
+- [ ] Export PDF / DOC pentru predarea oficială (opțional)  
 
 ---
-
