@@ -39,9 +39,11 @@ RN/
 │   └── Sistem_AI_Prezență_Studenți_FIIR_UPB_Baba_Cristian-Teodor.pptx
 │
 ├── data/
-│   ├── raw/                      # date brute (reale + generate AI)
-│   │   ├── input-poze-clasa/     # poze cu sala de curs (mulți studenți), reale + generate
-│   │   └── input-poze-fete/      # poze de înscriere (fețe cunoscute), reale + generate
+├── raw/
+│   ├── input-poze-clasa/         # poze cu clase, reale + generate AI
+│   ├── input-poze-fete/          # poze individuale, reale + generate AI
+│   ├── kaggle-real/              # imagini reale (5000) din Kaggle
+│   └── kaggle-ai/                # imagini generate AI (4630) din Kaggle
 │   │
 │   ├── processed/                # fețe crop-uite, normalizate (Etapa 3)
 │   │
