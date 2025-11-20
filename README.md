@@ -1,7 +1,7 @@
 <div align="center" style="padding: 20px 20px 10px; border-radius: 16px; background: linear-gradient(135deg, #111827, #020617); color: #fff;">
 
   <!-- Banner proiect (înlocuiește docs/banner.gif cu ce vrei tu) -->
-  <img src="docs/banner.gif" alt="Face Attendance AI System Banner" style="max-width: 100%; border-radius: 14px; margin-bottom: 18px; box-shadow: 0 18px 40px rgba(0,0,0,0.45);">
+  <img src="docs/banner.png" alt="Face Attendance AI System Banner" style="max-width: 100%; border-radius: 14px; margin-bottom: 18px; box-shadow: 0 18px 40px rgba(0,0,0,0.45);">
 
   <h1 style="font-size: 40px; margin-bottom: 0.2em;">📘 Etapa 3 – Analiza & Preprocesarea Datelor</h1>
   <h3 style="margin-top: 0;">Proiect: <span style="color:#38bdf8;">Face Attendance AI System</span></h3>
