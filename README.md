@@ -35,12 +35,13 @@ RN/
 ├── README.md
 │
 ├── docs/
-│   └── datasets/                 # descriere seturi de date, surse, diagrame
+│   ├── datasets/                 # descriere seturi de date, surse, diagrame
+│   └── Sistem_AI_Prezență_Studenți_FIIR_UPB_Baba_Cristian-Teodor.pptx
 │
 ├── data/
-│   ├── raw/                      # date brute
-│   │   ├── input-poze-clasa/     # poze cu sala de curs (mulți studenți)
-│   │   └── input-poze-fete/      # poze de înscriere (fețe cunoscute)
+│   ├── raw/                      # date brute (reale + generate AI)
+│   │   ├── input-poze-clasa/     # poze cu sala de curs (mulți studenți), reale + generate
+│   │   └── input-poze-fete/      # poze de înscriere (fețe cunoscute), reale + generate
 │   │
 │   ├── processed/                # fețe crop-uite, normalizate (Etapa 3)
 │   │
@@ -52,7 +53,7 @@ RN/
 │   ├── preprocessing/
 │   │   └── split_faces.py        # împărțire / extragere fețe din sprite-uri
 │   │
-│   ├── data_acquisition/         # (în viitor) captură din cameră, streaming
+│   ├── data_acquisition/         # (în viitor) captură din cameră, streaming / generare
 │   │
 │   ├── neural_network/
 │   │   ├── web_app.py            # aplicația web (UI + upload + pipeline)
@@ -89,22 +90,22 @@ RN/
   <div style="flex:1; min-width:260px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid #d1d5db; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>📍 Sursa Datelor</h3>
     <ul>
-      <li><strong>input-poze-clasa/</strong> – cadre cu sala de curs, mai mulți studenți simultan;</li>
-      <li><strong>input-poze-fete/</strong> – fotografii individuale pentru înscrierea fețelor cunoscute;</li>
-      <li>în viitor: captură directă din cameră prin modulul <code>data_acquisition/</code>.</li>
+      <li><strong>input-poze-clasa/</strong> – cadre cu sala de curs, cu mai mulți studenți simultan, formate atât din <strong>poze reale</strong>, cât și din <strong>poze generate AI</strong> (simulare amfiteatru / laborator);</li>
+      <li><strong>input-poze-fete/</strong> – fotografii individuale pentru înscrierea fețelor cunoscute, provenite atât din <strong>capturi reale</strong>, cât și din <strong>imagini generate AI</strong> (fețe sintetice folosite pentru extinderea și echilibrarea dataset-ului);</li>
+      <li>în viitor: captură directă din cameră prin modulul <code>data_acquisition/</code>, care va putea genera atât imagini reale, cât și secvențe simulate pentru testare.</li>
     </ul>
-    <p><strong>Scop:</strong> Construirea unui set de date realist pentru antrenarea și testarea sistemului de prezență bazat pe recunoaștere facială.</p>
+    <p><strong>Scop:</strong> Construirea unui set de date realist, dar și suficient de variat, prin combinarea imaginilor reale cu imagini generate AI, pentru a antrena și testa sistemul de prezență bazat pe recunoaștere facială în scenarii cât mai diverse.</p>
   </div>
 
   <div style="flex:1; min-width:260px; padding:20px; background:#f8fafc; border-radius:12px; border:1px solid #d1d5db; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>📊 Dimensiunea Dataset-ului</h3>
     <ul>
-      <li>~200–300 imagini brute (combinație între poze de clasă și poze individuale);</li>
-      <li>10–15 persoane distincte în versiunea curentă;</li>
+      <li>~200–300 imagini brute (combinație între poze de clasă și poze individuale, <strong>reale + generate AI</strong>);</li>
+      <li>10–15 persoane distincte în versiunea curentă (identități reale / simulate);</li>
       <li>Format imagini: <strong>JPG / PNG</strong>;</li>
-      <li>Rezoluție finală după preprocesare: <strong>224×224 px</strong> pe fiecare față.</li>
+      <li>Rezoluție finală după preprocesare: <strong>224×224 px</strong> pe fiecare față detectată de YOLO.</li>
     </ul>
-    <p>Imaginile sunt organizate pe persoane, astfel încât fiecare student să aibă suficient material pentru antrenare și test.</p>
+    <p>Imaginile sunt organizate pe persoane și pe tip (real / generat), astfel încât să existe suficient material pentru antrenare, validare și test, dar și pentru analiză comparativă între fețele reale și cele sintetice.</p>
   </div>
 
 </div>
@@ -120,6 +121,7 @@ Embedding-urile și metadatele generate după preprocesare:
 | `embedding`    | numeric  | 128        | Vector de featuri generat de rețeaua neuronală pentru față |
 | `confidence`   | numeric  | scalar     | Scor YOLO de încredere că zona detectată este o față       |
 | `bbox`         | numeric  | 4 valori   | Coordonatele dreptunghiului de detecție (x1,y1,x2,y2)      |
+| `synthetic`    | boolean  | scalar     | 0 = imagine reală, 1 = imagine generată AI                 |
 | `person_id`    | categ.   | scalar     | ID-ul / numele persoanei (label de clasă, dacă e cunoscută)|
 
 > Documentația detaliată se va afla în `docs/datasets/dataset_description.md`.
@@ -135,19 +137,19 @@ Embedding-urile și metadatele generate după preprocesare:
 
 ### 3.1 Statistici Descriptive
 
-Pe setul de imagini brute și pe embedding-uri sunt analizate:
+Pe setul de imagini brute (reale + generate AI) și pe embedding-uri sunt analizate:
 
 - numărul de imagini per persoană (distribuția etichetelor);
 - numărul de fețe detectate per fotografie de clasă;
 - histogramă pe valori de <code>confidence</code> YOLO;
 - distribuția dimensiunii bounding box-urilor (fețe foarte mici vs. foarte mari);
-- analiza calității imaginilor (blur, iluminare, unghi).
+- analiza calității imaginilor (blur, iluminare, unghi, realism pentru imaginile AI).
 
 Exemple de observații:
 
-- Persoanele au între 10 și 25 imagini utile fiecare;
+- Persoanele au între 10 și 25 imagini utile fiecare (combinație real + AI);
 - ~8–10% dintre imagini au <code>confidence</code> sub pragul stabilit și sunt marcate pentru excludere;
-- anumite poze de clasă conțin fețe foarte îndepărtate → risc de embedding slăbuț.
+- anumite poze de clasă (mai ales generate) conțin fețe foarte îndepărtate → risc de embedding slăbuț.
 
 ---
 
@@ -155,19 +157,19 @@ Exemple de observații:
 
 Sunt verificate următoarele probleme:
 
-- imagini fără nicio față detectată;
+- imagini (reale sau AI) fără nicio față detectată;
 - imagini cu fețe multiple care se suprapun sau sunt parțial acoperite;
-- imagini extrem de întunecate sau supraexpuse;
-- embedding-uri cu distanță prea mare față de restul clasei (posibile erori).
+- imagini extrem de întunecate, supraexpuse sau saturate;
+- embedding-uri cu distanță prea mare față de restul clasei (posibile erori sau fețe sintetice nereușite).
 
 ---
 
 ### 3.3 Probleme Identificate
 
-- Iluminare neuniformă între seturile de poze (în special între poze generate și poze reale);
-- Dezechilibru între persoane (unii studenți au mult mai multe imagini decât alții);
+- Iluminare neuniformă între seturile de poze, în special între poze generate și poze reale (diferențe de stil / contrast);
+- Dezechilibru între persoane (unii studenți au mult mai multe imagini decât alții, mai ales pe partea reală);
 - O parte dintre fețele detectate în <code>input-poze-clasa/</code> sunt prea mici pentru o recunoaștere robustă;
-- Câteva imagini conțin fețe neclare (motion blur) sau orientate la un unghi prea mare.
+- Câteva imagini (atât reale, cât și generate) conțin fețe neclare (motion blur) sau orientate la un unghi prea mare și sunt marcate pentru filtrare în etapa de curățare.
 
 </details>
 
@@ -182,14 +184,15 @@ Sunt verificate următoarele probleme:
 
 <div style="background:#fff7e6; padding:20px; border-left:5px solid #f59e0b; border-radius:8px;">
 <ul>
-  <li>Detecție facială pentru fiecare imagine folosind <code>yolov11m.pt</code> în <code>yolo_face_detector.py</code>;</li>
+  <li>Detecție facială pentru fiecare imagine (reală sau generată AI) folosind <code>yolov11m.pt</code> în <code>yolo_face_detector.py</code>;</li>
   <li>Filtrarea fețelor cu <strong>confidence</strong> sub un prag (ex. 0.65–0.70);</li>
-  <li>Excluderea imaginilor fără fețe valide;</li>
-  <li>Excluderea cazurilor cu multe fețe suprapuse sau foarte mici (la nevoie);</li>
-  <li>Eliminarea duplicatelor (aceeași imagine salvată de mai multe ori);</li>
+  <li>Excluderea imaginilor fără fețe valide sau cu fețe mult prea mici în cadru;</li>
+  <li>Excluderea cazurilor cu multe fețe suprapuse sau greu de separat;</li>
+  <li>Eliminarea duplicatelor (aceeași imagine salvată de mai multe ori, inclusiv în varianta generată);</li>
+  <li>Filtrarea imaginilor generate AI care prezintă artefacte evidente sau fețe nereale;</li>
   <li>Conversia formatelor și rezoluțiilor la un standard comun (JPG + rezoluție minimă acceptată).</li>
 </ul>
-Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă de imagini crop-uite cu fețele individuale.
+Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă de imagini crop-uite cu fețele individuale (reale și AI), gata pentru pasul de embedding.
 </div>
 
 </details>
@@ -205,20 +208,21 @@ Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă
 
   <div style="flex:1; min-width:270px; padding:20px; border-radius:10px; background:#020617; color:#e5e7eb; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>🧠 Embedding RN</h3>
-    <p>Fiecare față preprocesată este trecută prin modelul de rețea neuronală (ex. FaceNet / DeepFace) implementat în <code>face_embeddings.py</code>, rezultând un vector numeric de dimensiune 128. Acest vector reprezintă „amprenta” feței în spațiul de featuri.</p>
+    <p>Fiecare față preprocesată (reală sau generată AI) este trecută prin modelul de rețea neuronală (ex. FaceNet / DeepFace) implementat în <code>face_embeddings.py</code>, rezultând un vector numeric de dimensiune 128. Acest vector reprezintă „amprenta” feței în spațiul de featuri.</p>
     <p>Embedding-urile se salvează într-o structură de tip:
     <br><code>data/embeddings/{person_id}/face_01.npy</code></p>
+    <p>Pentru fețele generate AI, se verifică suplimentar dacă embedding-urile se aliniază cu distribuția embedding-urilor reale, iar cele care ies puternic din distribuție sunt marcate ca outlier și pot fi eliminate.</p>
   </div>
 
   <div style="flex:1; min-width:270px; padding:20px; border-radius:10px; background:#0f172a; color:#e5e7eb; transition: transform .25s ease, box-shadow .25s ease;">
     <h3>📏 Normalizare & Crop</h3>
     <ul>
-      <li>Decupare fețe pe baza bounding box-ului YOLO;</li>
-      <li>Redimensionare la <strong>224×224 px</strong> pentru toate imaginile;</li>
+      <li>Decupare fețe pe baza bounding box-ului YOLO (pentru imagini reale și AI);</li>
+      <li>Redimensionare la <strong>224×224 px</strong> pentru toate fețele;</li>
       <li>Conversie BGR → RGB și normalizare valori pixel (de ex. în intervalul [0,1]);</li>
-      <li>Opțional: eliminarea zgomotului, corecții de contrast sau augmentări ușoare.</li>
+      <li>Opțional: eliminarea zgomotului, corecții de contrast sau augmentări ușoare (rotiri, flip, ușor blur) aplicate atât pe imagini reale, cât și pe imagini generate pentru creșterea robustății.</li>
     </ul>
-    <p>Aceste transformări asigură consistența datelor de intrare pentru modelul neuronal.</p>
+    <p>Aceste transformări asigură consistența datelor de intrare pentru modelul neuronal, indiferent dacă fața provine dintr-o poză reală sau din una generată AI.</p>
   </div>
 
 </div>
@@ -235,14 +239,15 @@ Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă
 <div style="padding:25px; background:#e3fae6; border-radius:12px; border:1px solid #bbf7d0;">
   <h3>Proporții utilizate</h3>
   <ul>
-    <li>70% — <strong>Train</strong> (antrenare model RN pe embedding-uri);</li>
+    <li>70% — <strong>Train</strong> (antrenare model RN pe embedding-uri, folosind atât imagini reale, cât și o proporție controlată de imagini generate AI);</li>
     <li>15% — <strong>Validation</strong> (tuning hyperparametri, early stopping);</li>
-    <li>15% — <strong>Test</strong> (evaluare finală, fără a fi atins în timpul antrenării).</li>
+    <li>15% — <strong>Test</strong> (evaluare finală, preferabil pe imagini reale pentru o măsură corectă a performanței în aplicații practice).</li>
   </ul>
   <h4>Principii respectate:</h4>
   <ul>
     <li>Stratificare pe <code>person_id</code> astfel încât fiecare persoană să apară în toate seturile, dar cu imagini diferite;</li>
     <li>Fără scurgere de informație (no data leakage) între <code>train</code>, <code>validation</code> și <code>test</code>;</li>
+    <li>Imaginile generate AI sunt folosite în principal pentru <strong>train</strong> și eventual <strong>validation</strong>, în timp ce <strong>testul final</strong> se face predominant pe imagini reale;</li>
     <li>Statisticile de normalizare și eventualele transformări se calculează exclusiv pe <strong>train</strong> și apoi se aplică pe <strong>val/test</strong>.</li>
   </ul>
   <p>Seturile rezultate sunt salvate în folderele <code>data/train/</code>, <code>data/validation/</code> și <code>data/test/</code>, respectiv în fișiere CSV / JSON cu liste de căi + etichete.</p>
@@ -256,13 +261,14 @@ Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă
 
 <div style="padding:20px; background:#eff6ff; border-radius:12px; border:1px solid #bfdbfe;">
 <ul>
-  <li>📂 <code>data/raw/</code> – imagini brute (poze de clasă + poze individuale);</li>
+  <li>📂 <code>data/raw/</code> – imagini brute (poze de clasă + poze individuale, reale + generate AI);</li>
   <li>📂 <code>data/processed/</code> – fețe decupate și normalizate, gata pentru embedding;</li>
   <li>📂 <code>data/embeddings/</code> – vectori 128D pentru fiecare față (organizați pe persoane);</li>
   <li>📂 <code>data/train/</code>, <code>data/validation/</code>, <code>data/test/</code> – împărțirea finală a datelor pentru antrenare și testare;</li>
-  <li>📂 <code>src/preprocessing/</code> – scripturi dedicate tăierii și pregătirii fețelor (ex. <code>split_faces.py</code>);</li>
+  <li>📂 <code>src/preprocessing/</code> – scripturi dedicate tăierii și pregătirii fețelor (ex. <code>split_faces.py</code> și, în viitor, scripturi pentru generare de imagini AI);</li>
   <li>📂 <code>src/neural_network/</code> – codul de detecție, embedding și recunoaștere (<code>yolo_face_detector.py</code>, <code>face_embeddings.py</code>, <code>recognize_and_log.py</code>);</li>
   <li>📄 <code>docs/datasets/dataset_description.md</code> – descriere detaliată a dataset-ului (de completat);</li>
+  <li>📄 <code>docs/Sistem_AI_Prezență_Studenți_FIIR_UPB_Baba_Cristian-Teodor.pptx</code> – prezentarea oficială cu descrierea sistemului și a etapelor de lucru;</li>
   <li>📄 <code>config/preprocessing.yaml</code> – praguri de confidence, dimensiuni, și parametri de preprocesare (opțional).</li>
 </ul>
 </div>
@@ -272,7 +278,7 @@ Rezultatul acestei etape este salvat în <code>data/processed/</code> sub formă
 ## ✅ 6. Stare Etapă (to-do list GitHub)
 
 - [x] Structură repository configurată pentru Etapa 3  
-- [x] Colectare imagini brute în `data/raw/`  
+- [x] Colectare imagini brute în `data/raw/` (reale + generate AI)  
 - [x] Detecție facială + crop fețe în `data/processed/`  
 - [x] Generare embeddings (vectori 128D) în `data/embeddings/`  
 - [ ] Împărțire finală Train / Validation / Test salvată în folder-ele dedicate  
